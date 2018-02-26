@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VariablesViewState
+   version = "1.0">
+   <ContextStates>
+      <ContextState
+         contextName = "-[ExampleImageWallViewController collectionView:didSelectItemAtIndexPath:]:ExampleImageWallViewController.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "(ExampleImageWallCell*)0x12fd6f110">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "__59-[LKImageProcessorManager process:sync:processor:complete:]_block_invoke.134:LKImageProcessorManager.m">
+      </ContextState>
+      <ContextState
+         contextName = "__36-[LKImageLoaderManager loadRequest:]_block_invoke:LKImageLoaderManager.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "request_lv2.loader">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+   </ContextStates>
+</VariablesViewState>

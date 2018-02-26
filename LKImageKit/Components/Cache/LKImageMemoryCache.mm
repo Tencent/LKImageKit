@@ -1,0 +1,308 @@
+//
+//  LKImageMemoryCache.m
+//  LKImageKit
+//
+//  Created by batiliu
+//  Modified by lingtonke
+//  Copyright ©2014 - 2018 Tencent.All Rights Reserved. This software is licensed under the terms in the LICENSE.TXT file that accompanies this software.
+//
+
+#import "LKImageMemoryCache.h"
+#import "LKImageRequest+Private.h"
+#import <list>
+#import <map>
+#import <string>
+#import <vector>
+using namespace std;
+
+struct ImageNode
+{
+    string key;
+    UIImage *image;
+};
+
+struct ImagePointer
+{
+    list<ImageNode *>::iterator it;
+    bool isLRUQueue;
+    ImagePointer()
+    {
+        isLRUQueue = false;
+    }
+};
+
+@interface LKImageMemoryCache ()
+{
+    list<ImageNode *> FIFOQueue;
+    list<ImageNode *> LRUQueue;
+    map<string, ImagePointer *> imageMap;
+}
+
+@end
+
+@implementation LKImageMemoryCache
+
++ (instancetype)defaultCache
+{
+    NSAssert([NSThread isMainThread], @"LKImageMemoryCache is not running on Main Thread!");
+    static LKImageMemoryCache *instance = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        instance = [[self alloc] init];
+    });
+    return instance;
+}
+
+- (id)init
+{
+    if (self = [super init])
+    {
+        [[NSNotificationCenter defaultCenter]
+            addObserver:self
+               selector:@selector(didReceiveLowMemoryNotification)
+                   name:UIApplicationDidReceiveMemoryWarningNotification
+                 object:nil];
+        self.cacheSizeLimit   = 1024 * 1024 * 50;
+        self.maxLengthForLRU  = 400;
+        self.maxLengthForFIFO = 400;
+    }
+    return self;
+}
+
+- (void)dealloc
+{
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+- (void)clear
+{
+    for (auto it = imageMap.begin(); it != imageMap.end(); it++)
+    {
+        delete *it->second->it;
+        delete it->second;
+    }
+    FIFOQueue.clear();
+    LRUQueue.clear();
+    imageMap.clear();
+}
+
+- (void)clearWithURL:(NSString *)URL
+{
+    vector<string> deleteKeys;
+    for (auto it = imageMap.begin(); it != imageMap.end(); it++)
+    {
+        if (it->first.find([URL cStringUsingEncoding:NSUTF8StringEncoding]) != string::npos)
+        {
+            deleteKeys.push_back(it->first);
+        }
+    }
+
+    for (int i = 0; i < deleteKeys.size(); i++)
+    {
+        [self deleteCache:deleteKeys[i]];
+    }
+}
+
+- (void)deleteCache:(string)key
+{
+    auto it = imageMap.find(key);
+    if (it == imageMap.end())
+    {
+        return;
+    }
+    ImagePointer *ptr = it->second;
+    delete *(ptr->it);
+    if (ptr->isLRUQueue)
+    {
+        LRUQueue.erase(ptr->it);
+    }
+    else
+    {
+        FIFOQueue.erase(ptr->it);
+    }
+    delete ptr;
+    imageMap.erase(it);
+}
+
+- (void)clearWithKey:(NSString *)key
+{
+    [self deleteCache:[key cStringUsingEncoding:NSUTF8StringEncoding]];
+}
+
+- (NSString *)keyForURL:(NSString *)URL
+{
+    return URL;
+}
+
+- (void)limitCacheSize
+{
+    while (self.cacheSize > self.cacheSizeLimit)
+    {
+        [self clearLastOne];
+    }
+}
+
+- (void)clearLastOne
+{
+    if (LRUQueue.size() > 0)
+    {
+        [self clearLastOneInLRU];
+    }
+    else
+    {
+        [self clearLastOneInFIFO];
+    }
+}
+
+- (void)clearLastOneInLRU
+{
+    if (LRUQueue.size() > 0)
+    {
+        ImageNode *node = *LRUQueue.begin();
+        LRUQueue.pop_front();
+        auto it = imageMap.find(node->key);
+        delete it->second;
+        delete node;
+        imageMap.erase(it);
+    }
+}
+
+- (void)clearLastOneInFIFO
+{
+    if (FIFOQueue.size() > 0)
+    {
+        ImageNode *node = *FIFOQueue.begin();
+        FIFOQueue.pop_front();
+        auto it = imageMap.find(node->key);
+        delete it->second;
+        delete node;
+        imageMap.erase(it);
+    }
+}
+
+- (void)cacheImage:(UIImage *)image URL:(NSString *)URL
+{
+    NSString *key     = [self keyForURL:URL];
+    ImagePointer *ptr = NULL;
+    auto it           = imageMap.find([key cStringUsingEncoding:NSUTF8StringEncoding]);
+    if (it == imageMap.end())
+    {
+        ImageNode *node     = new ImageNode();
+        ptr                 = new ImagePointer();
+        node->image         = image;
+        node->key           = [key cStringUsingEncoding:NSUTF8StringEncoding];
+        ptr->it             = FIFOQueue.insert(FIFOQueue.end(), node);
+        imageMap[node->key] = ptr;
+        if (FIFOQueue.size() > self.maxLengthForFIFO)
+        {
+            ImageNode *node = *FIFOQueue.begin();
+            FIFOQueue.pop_front();
+            auto it = imageMap.find(node->key);
+            delete it->second;
+            delete node;
+            imageMap.erase(it);
+        }
+    }
+    else
+    {
+        ptr               = it->second;
+        (*ptr->it)->image = image;
+        [self visit:key];
+    }
+    [self limitCacheSize];
+}
+
+- (int64_t)cacheSize
+{
+    return [self cacheSize:NO];
+}
+
+- (int64_t)cacheSize:(BOOL)accurate
+{
+    __block int64_t length = 0;
+    for (auto it = imageMap.begin(); it != imageMap.end(); it++)
+    {
+        UIImage *image = (*it->second->it)->image;
+        if (accurate)
+        {
+            CGDataProviderRef data = CGImageGetDataProvider(image.CGImage);
+            CFDataRef cfdata       = CGDataProviderCopyData(data);
+            length += CFDataGetLength(cfdata);
+            CFRelease(cfdata);
+        }
+        else
+        {
+            length += image.size.width * image.size.height * 4;
+        }
+    }
+    return length;
+}
+- (void)visit:(NSString *)key
+{
+    auto it = imageMap.find([key cStringUsingEncoding:NSUTF8StringEncoding]);
+    if (it == imageMap.end())
+    {
+        return;
+    }
+    ImagePointer *ptr = it->second;
+    ImageNode *node   = *ptr->it;
+    if (ptr->isLRUQueue)
+    {
+        LRUQueue.erase(ptr->it);
+        ptr->it = LRUQueue.insert(LRUQueue.end(), node);
+    }
+    else
+    {
+        ptr->isLRUQueue = true;
+        FIFOQueue.erase(ptr->it);
+        ptr->it = LRUQueue.insert(LRUQueue.end(), node);
+    }
+
+    if (LRUQueue.size() > self.maxLengthForLRU)
+    {
+        [self clearLastOneInLRU];
+    }
+}
+
+- (UIImage *)imageWithURL:(NSString *)URL
+{
+    if (!URL)
+    {
+        return nil;
+    }
+    NSString *key = [self keyForURL:URL];
+    [self visit:key];
+    auto it = imageMap.find([key cStringUsingEncoding:NSUTF8StringEncoding]);
+    if (it == imageMap.end())
+    {
+        return nil;
+    }
+    UIImage *image = (*it->second->it)->image;
+    return image;
+}
+
+- (BOOL)hasCacheWithURL:(NSString *)URL
+{
+    NSString *key = [self keyForURL:URL];
+    [self visit:key];
+    auto it = imageMap.find([key cStringUsingEncoding:NSUTF8StringEncoding]);
+    return it != imageMap.end();
+}
+
+- (void)didReceiveLowMemoryNotification
+{
+    [self clear];
+}
+
+- (UIImage *)imageForRequest:(LKImageRequest *)request continueLoad:(BOOL *)continueLoad
+{
+    UIImage *image = [self imageWithURL:request.identifier];
+    return image;
+}
+
+- (void)cacheImage:(UIImage *)image forRequest:(LKImageRequest *)request
+{
+    [self cacheImage:image URL:request.identifier];
+}
+
+@end
