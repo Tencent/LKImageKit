@@ -11,88 +11,88 @@ The framework has a high degree of scalability. In this framework, developers ca
 
 ## 主要特性：
 
-	支持取消
+-	支持取消
 
-	支持请求合并
+-	支持请求合并
 
-	支持渐进式加载
+-	支持渐进式加载
 
-	支持优先级
+-	支持优先级
 
-	支持先加载小图再加载大图
+-	支持先加载小图再加载大图
 
-	支持预加载、预解码
+-	支持预加载、预解码
 
-	线程安全
+-	线程安全
 
-	调度、解码、加载、处理使用独立线程、且有并发控制
+-	调度、解码、加载、处理使用独立线程、且有并发控制
 
-	高度模块化，可由开发者自定义各部分模块
+-	高度模块化，可由开发者自定义各部分模块
 
 ## 	Main features:
 
-	Support canceled
+-	Support canceled
 
-	Support for the request of the merger
+-	Support for the request of the merger
 
-	Support for progressive loading
+-	Support for progressive loading
 
-	Support priority
+-	Support priority
 
-	Support the first load the thumbnail and then load the big picture
+-	Support the first load the thumbnail and then load the big picture
 
-	Support for preloading, pre-decoding
+-	Support for preloading, pre-decoding
 
-	Thread safety
+-	Thread safety
 
-	Scheduling, decoding, loading, dealing with the use of independent threads, and concurrency control
+-	Scheduling, decoding, loading, dealing with the use of independent threads, and concurrency control
 
-	A high degree of modularity, developers can customize each part of the module
+-	A high degree of modularity, developers can customize each part of the module
 
 ## 模块：
 
 ### 加载模块
 
-	网络文件加载（带文件缓存）
+-	网络文件加载（带文件缓存）
 
-	本地文件加载
+-	本地文件加载
 
-	相册加载
+-	相册加载
 
-	Bundle加载
+-	Bundle加载
 
 ### 解码模块
 
-	ImageIO
+-	ImageIO
 
 系统内置解码模块，支持PNG、JPG、GIF，支持渐进式解码
 
 ### 缓存模块
 
-	LRU、FIFO双队列缓存
+-	LRU、FIFO双队列缓存
 
-	MapTable自动缓存
+-	MapTable自动缓存
 
 ## Module:
 
 ### Loader:
 
-	Network file loading (with file cache)
+-	Network file loading (with file cache)
 
-	Local file loading
+-	Local file loading
 
-	Album file loading
+-	Album file loading
 
-	Bundle file loading
+-	Bundle file loading
 
 ### Decoder:
 
-	ImageIO
+-	ImageIO
 
-System built-in decoding module, support for PNG, JPG, GIF, support for progressive decoding
+  System built-in decoding module, support for PNG, JPG, GIF, support for progressive decoding
 
 ### Cache:
 
-	LRU, FIFO dual queue cache
+-	LRU, FIFO dual queue cache
 
-	MapTable automatically cache
+-	MapTable automatically cache
