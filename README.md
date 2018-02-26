@@ -9,17 +9,28 @@ LKImageKit is a high-performance image framework, including a series of capabili
 
 The framework has a high degree of scalability. In this framework, developers can customize any part of the picture frame, such as: custom picture display logic, custom cache, custom downloader, custom decoders, Custom image processing algorithms and more.
 
-主要特性：
+## 主要特性：
+
 	支持取消
+
 	支持请求合并
+
 	支持渐进式加载
+
 	支持优先级
+
 	支持先加载小图再加载大图
+
 	支持预加载、预解码
+
 	线程安全
+
 	调度、解码、加载、处理使用独立线程、且有并发控制
+
 	高度模块化，可由开发者自定义各部分模块
-`	Main features:
+
+## 	Main features:
+
 	Support canceled
 
 	Support for the request of the merger
@@ -38,9 +49,9 @@ The framework has a high degree of scalability. In this framework, developers ca
 
 	A high degree of modularity, developers can customize each part of the module
 
-模块：
+## 模块：
 
-加载模块
+### 加载模块
 
 	网络文件加载（带文件缓存）
 
@@ -50,21 +61,21 @@ The framework has a high degree of scalability. In this framework, developers ca
 
 	Bundle加载
 
-解码模块
+### 解码模块
 
 	ImageIO
 
 系统内置解码模块，支持PNG、JPG、GIF，支持渐进式解码
 
-缓存模块
+### 缓存模块
 
 	LRU、FIFO双队列缓存
 
 	MapTable自动缓存
 
-Module:
+## Module:
 
-Loader:
+### Loader:
 
 	Network file loading (with file cache)
 
@@ -74,13 +85,13 @@ Loader:
 
 	Bundle file loading
 
-Decoder:
+### Decoder:
 
 	ImageIO
 
 System built-in decoding module, support for PNG, JPG, GIF, support for progressive decoding
 
-Cache:
+### Cache:
 
 	LRU, FIFO dual queue cache
 
