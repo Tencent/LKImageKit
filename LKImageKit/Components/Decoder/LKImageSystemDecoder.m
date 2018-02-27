@@ -83,7 +83,7 @@
     CFMutableDictionaryRef option = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, nil, nil);
     if (request.processorList.count == 0)
     {
-        CFDictionarySetValue(option, kCGImageSourceShouldCacheImmediately, kCFBooleanFalse);
+        CFDictionarySetValue(option, kCGImageSourceShouldCacheImmediately, kCFBooleanTrue);
     }
 
     NSUInteger count = CGImageSourceGetCount(imageSource);
