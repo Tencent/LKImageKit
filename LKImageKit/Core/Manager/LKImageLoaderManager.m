@@ -297,6 +297,7 @@
             LKDispatch(requestLV2.synchronized, requestLV2.loader.gcd_queue, ^{
                 if (requestLV2.isCanceled)
                 {
+                    dispatch_semaphore_signal(requestLV2.loader.semaphore);
                     return;
                 }
                 requestLV2.isStarted = YES;
@@ -323,6 +324,7 @@
             LKDispatch(requestLV2.synchronized, requestLV2.loader.gcd_queue, ^{
                 if (requestLV2.isCanceled)
                 {
+                    dispatch_semaphore_signal(requestLV2.loader.semaphore);
                     return;
                 }
                 requestLV2.isStarted = YES;
@@ -330,11 +332,12 @@
                                            callback:^(LKImageRequest *requestLV2, UIImage *image, float progress, NSError *error) {
                                                [self loadImageRequestFinished:requestLV2 image:image progress:progress error:error];
                                            }];
-                if (!requestLV2.synchronized)
-                {
-                    dispatch_semaphore_wait(requestLV2.loader.semaphore, DISPATCH_TIME_FOREVER);
-                }
+                
             });
+            if (!requestLV2.synchronized)
+            {
+                dispatch_semaphore_wait(requestLV2.loader.semaphore, DISPATCH_TIME_FOREVER);
+            }
         }];
         [requestLV2.loader.queue lk_addOperation:op request:requestLV2];
     }

@@ -200,12 +200,20 @@
                     [self dataWithRequest:loaderTask.request callback:callback];
                 });
             }
+            else
+            {
+                if (callback)
+                {
+                    callback(request, nil, 1, error);
+                }
+            }
+            
         }
         else
         {
             if (callback)
             {
-                callback(request, nil, 0, error);
+                callback(request, nil, 1, error);
             }
         }
     }
