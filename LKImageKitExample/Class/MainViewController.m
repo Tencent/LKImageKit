@@ -23,7 +23,7 @@
 
 @end
 
-@interface MainViewController () <UICollectionViewDelegateFlowLayout,UIActionSheetDelegate>
+@interface MainViewController () <UICollectionViewDelegateFlowLayout>
 
 @property (nonatomic) NSArray<NSArray *> *examples;
 
@@ -73,8 +73,13 @@
 {
     if (indexPath.item == 3)
     {
-        UIActionSheet *sheet = [[UIActionSheet alloc] initWithTitle:@"ClearCache" delegate:self cancelButtonTitle:@"Cancel" destructiveButtonTitle:@"Clear" otherButtonTitles:nil];
-        [sheet showInView:self.view];
+        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"ClearCache" message:nil preferredStyle:UIAlertControllerStyleActionSheet];
+        [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+        [alertController addAction:[UIAlertAction actionWithTitle:@"Clear" style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
+            [[LKImageCacheManager defaultManager] clearAll];
+            [LKImageNetworkFileLoader clearCache];
+        }]];
+        [self presentViewController:alertController animated:YES completion:nil];
     }
     else
     {
@@ -98,12 +103,6 @@
 {
     CGFloat width = collectionView.bounds.size.width / 2 - 3;
     return CGSizeMake(width, width);
-}
-
-- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex
-{
-    [[LKImageCacheManager defaultManager] clearAll];
-    [LKImageNetworkFileLoader clearCache];
 }
 
 @end
