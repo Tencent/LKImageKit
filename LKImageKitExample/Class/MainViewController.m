@@ -36,6 +36,7 @@
     [super awakeFromNib];
     self.examples = @[
         @[@"1.jpg", @"自定义属性\nCustomProperty", @"", @"ExampleCustomPropertyViewController"],
+        @[@"2.jpg", @"图片墙\nImageWall", @"", @"ExampleImageWallViewController"],
         @[@"3.jpg", @"优化图片墙\nOptimizedImageWall", @"", @"ExampleImageWallOptimizedViewController"],
         @[@"4.jpg", @"清除缓存\nClearCache", @"", @""],
     ];
