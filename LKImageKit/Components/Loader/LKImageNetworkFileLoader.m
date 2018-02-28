@@ -63,7 +63,7 @@
     self.taskTable                                = [[NSMapTable alloc] initWithKeyOptions:NSPointerFunctionsStrongMemory valueOptions:NSPointerFunctionsStrongMemory capacity:0];
     self.sessionQueue                             = [[NSOperationQueue alloc] init];
     self.sessionQueue.name                        = [NSStringFromClass([self class]) stringByAppendingString:@"Queue"];
-    self.sessionQueue.maxConcurrentOperationCount = 20;
+    self.sessionQueue.maxConcurrentOperationCount = 1;
     self.session                                  = [NSURLSession
                                                      sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]
                                                      delegate:self
