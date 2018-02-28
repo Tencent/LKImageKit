@@ -26,7 +26,7 @@
     if (self = [super init])
     {
         self.cache                = [[NSCache alloc] init];
-        self.cache.totalCostLimit = 1024 * 1024 * 100;
+        self.cache.totalCostLimit = 1024 * 1024 * 20;
     }
     return self;
 }
