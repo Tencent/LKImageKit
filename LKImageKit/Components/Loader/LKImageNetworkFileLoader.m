@@ -33,6 +33,7 @@
 @property (nonatomic, strong) NSURLSession *session;
 @property (nonatomic, strong) NSMapTable *reqTable;
 @property (nonatomic, strong) NSMapTable *taskTable;
+@property (nonatomic, strong) NSLock *lock;
 
 @end
 
@@ -42,7 +43,7 @@
 {
     if (self = [super init])
     {
-        
+        _lock = [[NSLock alloc] init];
     }
     return self;
 }
@@ -63,7 +64,7 @@
     self.taskTable                                = [[NSMapTable alloc] initWithKeyOptions:NSPointerFunctionsStrongMemory valueOptions:NSPointerFunctionsStrongMemory capacity:0];
     self.sessionQueue                             = [[NSOperationQueue alloc] init];
     self.sessionQueue.name                        = [NSStringFromClass([self class]) stringByAppendingString:@"Queue"];
-    self.sessionQueue.maxConcurrentOperationCount = 1;
+    self.sessionQueue.maxConcurrentOperationCount = 20;
     self.session                                  = [NSURLSession
                                                      sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]
                                                      delegate:self
@@ -114,13 +115,17 @@
     loaderTask.callback                      = callback;
     loaderTask.data                          = [NSMutableData data];
     loaderTask.request                       = request;
+    [self.lock lock];
     [self.reqTable setObject:loaderTask forKey:request.keyForLoader];
     [self.taskTable setObject:loaderTask forKey:@(task.taskIdentifier)];
+    [self.lock unlock];
 }
 
 - (LKImageLoaderCancelResult)cancelRequest:(LKImageRequest *)request
 {
+    [self.lock lock];
     LKImageNetworkFileLoaderTask *loaderTask = [self.reqTable objectForKey:request.keyForLoader];
+    [self.lock unlock];
     NSURLSessionTask *task                   = loaderTask.task;
     if (task)
     {
@@ -152,7 +157,9 @@
 
 - (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didReceiveData:(NSData *)data
 {
+    [self.lock lock];
     LKImageNetworkFileLoaderTask *loaderTask = [self.taskTable objectForKey:@(dataTask.taskIdentifier)];
+    [self.lock unlock];
     LKImageDataCallback callback             = loaderTask.callback;
     NSMutableData *recvdata                  = loaderTask.data;
     LKImageRequest *request                  = loaderTask.request;
@@ -177,7 +184,9 @@
 
 - (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didCompleteWithError:(NSError *)error
 {
+    [self.lock lock];
     LKImageNetworkFileLoaderTask *loaderTask = [self.taskTable objectForKey:@(task.taskIdentifier)];
+    [self.lock unlock];
     if (!loaderTask)
     {
         return;
@@ -186,8 +195,10 @@
     LKImageDataCallback callback = loaderTask.callback;
     NSMutableData *data          = loaderTask.data;
     LKImageRequest *request      = loaderTask.request;
+    [self.lock lock];
     [self.reqTable removeObjectForKey:request.keyForLoader];
     [self.taskTable removeObjectForKey:@(task.taskIdentifier)];
+    [self.lock unlock];
     NSURL *fileURL = [NSURL fileURLWithPath:[LKImageNetworkFileLoader cacheFilePathForURL:request.keyForLoader]];
     if (error)
     {
