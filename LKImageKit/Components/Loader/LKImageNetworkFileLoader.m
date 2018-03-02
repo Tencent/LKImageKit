@@ -148,7 +148,9 @@
         NSString *num          = rsp.allHeaderFields[@"Content-Length"];
         if ([num isKindOfClass:[NSString class]])
         {
+            [self.lock lock];
             LKImageNetworkFileLoaderTask *loaderTask = [self.taskTable objectForKey:@(dataTask.taskIdentifier)];
+            [self.lock unlock];
             loaderTask.totalLength                   = [num integerValue];
         }
     }
