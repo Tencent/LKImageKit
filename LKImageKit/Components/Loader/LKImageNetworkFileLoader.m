@@ -109,7 +109,7 @@
                                                 cachePolicy:NSURLRequestReloadIgnoringCacheData
                                             timeoutInterval:self.timeoutInterval];
     NSURLSessionDataTask *task = [self.session dataTaskWithRequest:URLrequest];
-    [task resume];
+    
     LKImageNetworkFileLoaderTask *loaderTask = [[LKImageNetworkFileLoaderTask alloc] init];
     loaderTask.task                          = task;
     loaderTask.callback                      = callback;
@@ -119,6 +119,8 @@
     [self.reqTable setObject:loaderTask forKey:request.keyForLoader];
     [self.taskTable setObject:loaderTask forKey:@(task.taskIdentifier)];
     [self.lock unlock];
+    
+    [task resume];
 }
 
 - (LKImageLoaderCancelResult)cancelRequest:(LKImageRequest *)request
