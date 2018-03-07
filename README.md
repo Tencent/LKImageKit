@@ -9,7 +9,9 @@ LKImageKit is a high-performance image framework, including a series of capabili
 
 The framework has a high degree of scalability. In this framework, developers can customize any part of the picture frame, such as: custom picture display logic, custom cache, custom downloader, custom decoders, Custom image processing algorithms and more.
 
-![](https://github.com/Tencent/LKImageKit/blob/master/FastImageLoad.gif) 
+# Video:https://youtu.be/xz503GV5PpE
+
+![](https://github.com/kelingjie1/MyResources/blob/master/FastImageLoad.gif) 
 
 ## 主要特性：
 
