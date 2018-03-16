@@ -149,6 +149,7 @@
                                                             <segment title="big.jpg"/>
                                                             <segment title="small.gif"/>
                                                             <segment title="big.gif"/>
+                                                            <segment title="test.webp"/>
                                                         </segments>
                                                         <connections>
                                                             <action selector="reload:" destination="B3s-Jr-exZ" eventType="valueChanged" id="7gt-xZ-Zft"/>

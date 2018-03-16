@@ -13,6 +13,7 @@
 #import "ExampleCustomPropertyViewController.h"
 #import "ExampleImageWallOptimizedViewController.h"
 #import "ExampleImageWallViewController.h"
+#import "LKImageWebPDecoder.h"
 
 @implementation MainViewControllerCell
 
@@ -45,6 +46,9 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    LKImageConfiguration *config = [LKImageConfiguration defaultConfiguration];
+    config.decoderList = [config.decoderList arrayByAddingObject:[[LKImageWebPDecoder alloc] init]];
+    [[LKImageManager defaultManager] setConfiguration:config];
     //[LKImageNetworkFileLoader clearCache];
 }
 

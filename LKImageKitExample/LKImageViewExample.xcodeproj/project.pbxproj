@@ -23,6 +23,8 @@
 		073AD0F31FEB7B0A00DEAE34 /* ExampleImageWallViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 073AD0F21FEB7B0A00DEAE34 /* ExampleImageWallViewController.m */; };
 		073AD0F51FEB840400DEAE34 /* ImageWall.png in Resources */ = {isa = PBXBuildFile; fileRef = 073AD0F41FEB840400DEAE34 /* ImageWall.png */; };
 		073AD0F71FEB8DFE00DEAE34 /* CustomProperty.png in Resources */ = {isa = PBXBuildFile; fileRef = 073AD0F61FEB8DFE00DEAE34 /* CustomProperty.png */; };
+		07467760205BEB6D0079A946 /* WebP.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0746775D205BEB6D0079A946 /* WebP.framework */; };
+		07467761205BEB6D0079A946 /* LKImageWebPDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 0746775E205BEB6D0079A946 /* LKImageWebPDecoder.m */; };
 		0770C87C201857090018407D /* Common.m in Sources */ = {isa = PBXBuildFile; fileRef = 0770C87B201857060018407D /* Common.m */; };
 		07CAEE512004802A002B96CA /* ExampleImageWallOptimizedViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 07CAEE502004802A002B96CA /* ExampleImageWallOptimizedViewController.m */; };
 		07CAEE54200483B3002B96CA /* ExampleNetworkFileLoader.m in Sources */ = {isa = PBXBuildFile; fileRef = 07CAEE53200483B3002B96CA /* ExampleNetworkFileLoader.m */; };
@@ -85,6 +87,9 @@
 		073AD0F21FEB7B0A00DEAE34 /* ExampleImageWallViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ExampleImageWallViewController.m; sourceTree = "<group>"; };
 		073AD0F41FEB840400DEAE34 /* ImageWall.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ImageWall.png; sourceTree = "<group>"; };
 		073AD0F61FEB8DFE00DEAE34 /* CustomProperty.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = CustomProperty.png; sourceTree = "<group>"; };
+		0746775D205BEB6D0079A946 /* WebP.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = WebP.framework; sourceTree = "<group>"; };
+		0746775E205BEB6D0079A946 /* LKImageWebPDecoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LKImageWebPDecoder.m; sourceTree = "<group>"; };
+		0746775F205BEB6D0079A946 /* LKImageWebPDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LKImageWebPDecoder.h; sourceTree = "<group>"; };
 		0770C87A201857060018407D /* Common.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Common.h; sourceTree = "<group>"; };
 		0770C87B201857060018407D /* Common.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Common.m; sourceTree = "<group>"; };
 		07CAEE4F2004802A002B96CA /* ExampleImageWallOptimizedViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ExampleImageWallOptimizedViewController.h; sourceTree = "<group>"; };
@@ -100,6 +105,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				07467760205BEB6D0079A946 /* WebP.framework in Frameworks */,
 				073AD0CE1FE8C30F00DEAE34 /* LKImageKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -111,6 +117,7 @@
 			isa = PBXGroup;
 			children = (
 				073AD0BC1FE8C11400DEAE34 /* Info.plist */,
+				0746775B205BEB360079A946 /* Plugin */,
 				073AD0B61FE8C11400DEAE34 /* Class */,
 				073AD0AF1FE8C11400DEAE34 /* Resource */,
 				073AD0C51FE8C21900DEAE34 /* LKImageKit */,
@@ -184,6 +191,25 @@
 				073AD0CB1FE8C23A00DEAE34 /* LKImageKit.framework */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		0746775B205BEB360079A946 /* Plugin */ = {
+			isa = PBXGroup;
+			children = (
+				0746775C205BEB360079A946 /* LKImageWebPDecoder */,
+			);
+			name = Plugin;
+			path = ../Plugin;
+			sourceTree = "<group>";
+		};
+		0746775C205BEB360079A946 /* LKImageWebPDecoder */ = {
+			isa = PBXGroup;
+			children = (
+				0746775F205BEB6D0079A946 /* LKImageWebPDecoder.h */,
+				0746775E205BEB6D0079A946 /* LKImageWebPDecoder.m */,
+				0746775D205BEB6D0079A946 /* WebP.framework */,
+			);
+			path = LKImageWebPDecoder;
 			sourceTree = "<group>";
 		};
 		079406C41F19FC85001F844C /* Frameworks */ = {
@@ -314,6 +340,7 @@
 				0770C87C201857090018407D /* Common.m in Sources */,
 				073AD0C31FE8C11400DEAE34 /* MainViewController.m in Sources */,
 				07CAEE512004802A002B96CA /* ExampleImageWallOptimizedViewController.m in Sources */,
+				07467761205BEB6D0079A946 /* LKImageWebPDecoder.m in Sources */,
 				073AD0C21FE8C11400DEAE34 /* main.m in Sources */,
 				073959151FF242C700D94D27 /* ExampleUtil.m in Sources */,
 				073AD0C11FE8C11400DEAE34 /* AppDelegate.m in Sources */,
@@ -462,6 +489,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				DEVELOPMENT_TEAM = 557RBV9698;
+				FRAMEWORK_SEARCH_PATHS = "\"$(SRCROOT)/../Plugin\"/**";
 				FRAMEWORK_VERSION = "";
 				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -480,6 +508,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				DEVELOPMENT_TEAM = 557RBV9698;
+				FRAMEWORK_SEARCH_PATHS = "\"$(SRCROOT)/../Plugin\"/**";
 				FRAMEWORK_VERSION = "";
 				INFOPLIST_FILE = "$(SRCROOT)/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";

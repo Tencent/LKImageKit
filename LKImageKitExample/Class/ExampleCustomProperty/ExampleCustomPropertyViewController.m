@@ -89,6 +89,7 @@
                                    size:0],
         [ImageURLPrefix stringByAppendingString:@"gif/1.gif"],
         [ImageURLPrefix stringByAppendingString:@"gif/3.gif"],
+        [ImageURLPrefix stringByAppendingString:@"webp/test.webp"],
     ];
     self.imageView.scaleMode          = self.scaleModeSwitch.selectedSegmentIndex;
     self.imageView.predrawEnabled     = self.predrawSwitch.on;
