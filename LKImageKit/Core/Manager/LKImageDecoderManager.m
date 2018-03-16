@@ -11,10 +11,15 @@
 #import "LKImageDefine.h"
 #import "LKImagePrivate.h"
 #import "LKImageUtil.h"
+#import "LKImageMonitor.h"
+
+@implementation LKImageDecodeResult
+
+@end
 
 @implementation LKImageDecoder
 
-- (UIImage *)imageFromData:(NSData *)data request:(LKImageRequest *)request error:(NSError *__autoreleasing *)error
+- (LKImageDecodeResult *)decodeResultFromData:(NSData *)data request:(LKImageRequest *)request
 {
     return nil;
 }
@@ -53,7 +58,7 @@
         _queue.qualityOfService            = NSQualityOfServiceUserInteractive;
         _queue.maxConcurrentOperationCount = 10;
         _queue.name                        = [NSStringFromClass([self class]) stringByAppendingString:@"Queue"];
-
+        
         self.decoderList = [NSMutableArray arrayWithArray:decoderList];
     }
     return self;
@@ -76,6 +81,8 @@
 
 - (void)_decodeImageFromData:(NSData *)data request:(LKImageRequest *)request complete:(LKImageDecoderCallback)complete
 {
+    NSDate *date = [NSDate date];
+    NSError *error = nil;
     if (request.error)
     {
         if (complete)
@@ -84,7 +91,7 @@
         }
         goto end;
     }
-
+    
     if (!data)
     {
         if (complete)
@@ -93,40 +100,51 @@
         }
         goto end;
     }
-    BOOL found         = NO;
-    request.isDecoding = YES;
+    BOOL found          = NO;
+    request.isDecoding  = YES;
     for (LKImageDecoder *decoder in self.decoderList)
     {
-        NSError *decode_error;
-        UIImage *image = [decoder imageFromData:data request:request error:&decode_error];
-        if (image)
+        LKImageDecodeResult *result = [decoder decodeResultFromData:data request:request];
+        if (result)
         {
-            if (complete)
+            if (result.image)
             {
-                complete(request, image, nil);
+                request.imageType = result.type;
+                request.decoder = decoder;
+                request.decodeDuration = [[NSDate date] timeIntervalSinceDate:date];
+                if (complete)
+                {
+                    complete(request, result.image, nil);
+                }
+                request.isDecoding = NO;
+                goto end;
             }
-            request.isDecoding = NO;
-            goto end;
-        }
-        else
-        {
-            if (decode_error)
+            else
             {
+                if (result.error)
+                {
+                    error = result.error;
+                }
                 found = YES;
                 if (!self.continueTryToDecodeWhenFailed)
                 {
                     break;
                 }
             }
+            
         }
     }
-
+    
     request.isDecoding = NO;
     if (found)
     {
+        if (!error)
+        {
+            error = [LKImageError errorWithCode:LKImageErrorCodeDecodeFailed];
+        }
         if (complete)
         {
-            complete(request, nil, [LKImageError errorWithCode:LKImageErrorCodeDecodeFailed]);
+            complete(request, nil, error);
         }
     }
     else
@@ -141,6 +159,7 @@ end:
     {
         request.decoderAttach   = nil;
     }
+    [[LKImageMonitor instance] requestDidFinishDecode:request];
 }
 
 - (void)decodeImageFromData:(NSData *)data request:(LKImageRequest *)request complete:(LKImageDecoderCallback)complete

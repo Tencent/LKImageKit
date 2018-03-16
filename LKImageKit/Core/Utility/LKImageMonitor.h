@@ -8,12 +8,26 @@
 //  Created by lingtonke
 
 #import <Foundation/Foundation.h>
+#import "LKImageRequest.h"
+
+#import <Foundation/Foundation.h>
+#import "LKImageRequest.h"
 
 NS_ASSUME_NONNULL_BEGIN
+@class LKImageLoader;
+@class LKImageDecoder;
+@protocol LKImageMonitorDelegate <NSObject>
+
+- (void)requestDidFinishLoad:(LKImageRequest*)request;
+- (void)requestDidFinishDecode:(LKImageRequest*)request;
+
+@end
 
 @interface LKImageMonitor : NSObject
 
 + (instancetype)instance;
+
+@property (nonatomic, weak) id<LKImageMonitorDelegate> delegate;
 
 @property (nonatomic, assign, readonly) NSInteger totalRequestCount;
 @property (nonatomic, assign, readonly) NSInteger runningRequestCount;

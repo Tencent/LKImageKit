@@ -8,8 +8,17 @@
 //  Created by lingtonke
 
 #import <stdatomic.h>
+#import "LKImageMonitor.h"
 
 extern atomic_int LKImageTotalRequestCount;
 extern atomic_int LKImageRunningRequestCount;
 extern atomic_int LKImageCancelRequestCount;
 extern atomic_int LKImageFinishRequestCount;
+
+@interface LKImageMonitor (Private)
+
+- (void)requestDidFinishLoad:(LKImageRequest*)request;
+- (void)requestDidFinishDecode:(LKImageRequest*)request;
+
+@end
+

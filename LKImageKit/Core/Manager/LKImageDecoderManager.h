@@ -13,13 +13,20 @@
 #import <UIKit/UIKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
+@interface LKImageDecodeResult : NSObject
+
+@property (nonatomic, strong) UIImage *image;
+@property (nonatomic, strong) NSString *type;
+@property (nonatomic, strong) NSError *error;
+
+@end
 
 @interface LKImageDecoder : NSObject
 
-// 1、not supported:return nil without error
-// 2、supported but error:return nil with error
-// 3、success:return image without error
-- (UIImage * _Nullable )imageFromData:(NSData * _Nullable)data request:(LKImageRequest * _Nullable)request error:(NSError ** _Nullable)error;
+// 1、not supported:return nil
+// 2、supported but error:return LKImageDecodeResult with error
+// 3、success:return LKImageDecodeResult with image
+- (LKImageDecodeResult * _Nullable )decodeResultFromData:(NSData * _Nullable)data request:(LKImageRequest * _Nullable)request;
 
 @end
 

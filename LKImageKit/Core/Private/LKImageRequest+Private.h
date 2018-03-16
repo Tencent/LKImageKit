@@ -29,9 +29,14 @@
 @property (nonatomic, assign) float progress;
 @property (nonatomic, strong) NSError *error;
 @property (nonatomic, assign) BOOL hasCache;
+@property (nonatomic, assign) LKImageDecoder *decoder;
+@property (nonatomic, assign) float decodeDuration;
+@property (nonatomic, strong) NSString *imageType;
+@property (nonatomic, assign) float loadDuration;
 @property (nonatomic, weak) LKImageRequest *superRequest;
 @property (nonatomic, copy) LKImageManagerCallback managerCallback;
 @property (nonatomic, copy) LKImageLoaderCallback loaderCallback;
+@property (nonatomic, copy) LKImagePreloadCallback preloadCallback;
 @property (nonatomic, strong) NSMutableArray<LKImageRequest *> *requestList;
 @property (nonatomic, strong) NSArray<LKImageProcessor *> *internalProcessorList;
 @property (nonatomic, strong) NSArray<LKImageProcessor *> *processorList;
@@ -39,6 +44,7 @@
 
 - (BOOL)canCancel;
 
+- (void)invokePreloadCallback;
 - (void)managerCallback:(UIImage *)image isFromSyncCache:(BOOL)isFromSyncCache;
 - (void)loaderCallback:(UIImage *)image;
 - (void)reset;

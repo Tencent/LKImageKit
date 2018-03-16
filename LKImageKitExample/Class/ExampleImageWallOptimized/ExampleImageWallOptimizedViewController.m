@@ -50,7 +50,7 @@
         ExampleImageURLRequest *request = [ExampleImageURLRequest requestWithURL:[ExampleUtil imageURLFromFileID:i + 1 size:64]];
         request.dataCacheEnabled        = YES;
         request.priority                = NSOperationQueuePriorityVeryLow;
-        [[LKImageManager imageWallManager].loaderManager preloadWithRequest:request];
+        [[LKImageManager imageWallManager].loaderManager preloadWithRequest:request callback:nil];
         [self.preloadRequests addObject:request];
     }
 }
@@ -82,7 +82,7 @@
         LKImageRequest *request = [LKImageURLRequest requestWithURL:URL];
         request.priority = NSOperationQueuePriorityHigh;
         [self.mapTable setObject:request forKey:indexPath];
-        [[LKImageManager imageWallManager].loaderManager preloadWithRequest:request];
+        [[LKImageManager imageWallManager].loaderManager preloadWithRequest:request callback:nil];
     }
 }
 

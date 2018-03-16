@@ -24,8 +24,13 @@ typedef NS_ENUM(NSUInteger, LKImageScaleMode) {
     LKImageScaleModeAspectFill,  //influenced by anchorPoint
 };
 
-typedef void (^LKImageManagerCallback)(LKImageRequest *request, UIImage *image, BOOL isFromSyncCache);
-typedef void (^LKImageLoaderCallback)(LKImageRequest *request, UIImage *image);
-typedef void (^LKImageDecoderCallback)(LKImageRequest *request, UIImage *image, NSError *error);
-typedef void (^LKImageImageCallback)(LKImageRequest *request, UIImage *image, float progress, NSError *error);
-typedef void (^LKImageDataCallback)(LKImageRequest *request, NSData *data, float progress, NSError *error);
+NS_ASSUME_NONNULL_BEGIN
+
+typedef void (^LKImageManagerCallback)(LKImageRequest *request, UIImage * _Nullable image, BOOL isFromSyncCache);
+typedef void (^LKImageLoaderCallback)(LKImageRequest *request, UIImage * _Nullable image);
+typedef void (^LKImageDecoderCallback)(LKImageRequest *request, UIImage * _Nullable image, NSError * _Nullable error);
+typedef void (^LKImageImageCallback)(LKImageRequest *request, UIImage * _Nullable image, float progress, NSError * _Nullable error);
+typedef void (^LKImageDataCallback)(LKImageRequest *request, NSData * _Nullable data, float progress, NSError * _Nullable error);
+typedef void (^LKImagePreloadCallback)(LKImageRequest *request);
+
+NS_ASSUME_NONNULL_END

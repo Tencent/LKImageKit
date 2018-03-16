@@ -212,6 +212,39 @@ struct ImagePointer
     [self limitCacheSize];
 }
 
+- (int64_t)singleImageSize:(UIImage*)image accurate:(BOOL)accurate
+{
+    if (accurate)
+    {
+        CGDataProviderRef data = CGImageGetDataProvider(image.CGImage);
+        CFDataRef cfdata       = CGDataProviderCopyData(data);
+        int64_t length = CFDataGetLength(cfdata);
+        CFRelease(cfdata);
+        return length;
+    }
+    else
+    {
+        return image.size.width * image.size.height * image.scale * image.scale * 4;
+    }
+}
+
+- (int64_t)imageSize:(UIImage*)image accurate:(BOOL)accurate
+{
+    if (image.images.count==0)
+    {
+        return [self singleImageSize:image accurate:accurate];
+    }
+    else
+    {
+        int64_t length = 0;
+        for (UIImage *subimage in image.images)
+        {
+            length += [self singleImageSize:subimage accurate:accurate];
+        }
+        return length;
+    }
+}
+
 - (int64_t)cacheSize
 {
     return [self cacheSize:NO];
@@ -223,17 +256,7 @@ struct ImagePointer
     for (auto it = imageMap.begin(); it != imageMap.end(); it++)
     {
         UIImage *image = (*it->second->it)->image;
-        if (accurate)
-        {
-            CGDataProviderRef data = CGImageGetDataProvider(image.CGImage);
-            CFDataRef cfdata       = CGDataProviderCopyData(data);
-            length += CFDataGetLength(cfdata);
-            CFRelease(cfdata);
-        }
-        else
-        {
-            length += image.size.width * image.size.height * 4;
-        }
+        length += [self imageSize:image accurate:accurate];
     }
     return length;
 }

@@ -46,7 +46,7 @@
 
 @implementation LKImageSystemDecoder
 
-- (UIImage *)imageFromData:(NSData *)data request:(LKImageRequest *)request error:(NSError *__autoreleasing *)error
+- (LKImageDecodeResult *)decodeResultFromData:(NSData *)data request:(LKImageRequest *)request
 {
     if (!data)
     {
@@ -73,6 +73,8 @@
         return nil;
     }
     
+    LKImageDecodeResult *result = [[LKImageDecodeResult alloc] init];
+    result.type = (__bridge NSString*)type;
     if (UTTypeEqual(type, kUTTypeGIF))
     {
         if (request.progress < 1.0)
@@ -85,12 +87,11 @@
     {
         CFDictionarySetValue(option, kCGImageSourceShouldCacheImmediately, kCFBooleanTrue);
     }
-
+    
     NSUInteger count = CGImageSourceGetCount(imageSource);
-    UIImage *result  = nil;
     if (count == 0)
     {
-        result = [UIImage imageWithData:data scale:[UIScreen mainScreen].scale];
+        result.image = [UIImage imageWithData:data scale:[UIScreen mainScreen].scale];
     }
     else if (count == 1)
     {
@@ -104,12 +105,12 @@
             {
                 orientation = [LKImageUtil UIImageOrientationFromCGImagePropertyOrientation:(CGImagePropertyOrientation) num.integerValue];
             }
-
+            
             CFRelease(cfdic);
         }
-
+        
         UIImage *image = [UIImage imageWithCGImage:imageRef scale:[UIScreen mainScreen].scale orientation:orientation];
-        result         = image;
+        result.image   = image;
         CGImageRelease(imageRef);
     }
     else
@@ -119,26 +120,26 @@
         {
             CGImageRef imageRef            = CGImageSourceCreateImageAtIndex(imageSource, i, i == 0 ? option : nil);
             UIImageOrientation orientation = UIImageOrientationUp;
-
+            
             CFDictionaryRef cfdic = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nil);
             if (cfdic)
             {
                 NSNumber *num = (__bridge NSNumber *) CFDictionaryGetValue(cfdic, kCGImagePropertyOrientation);
-
+                
                 if (num != nil)
                 {
                     orientation = [LKImageUtil UIImageOrientationFromCGImagePropertyOrientation:(CGImagePropertyOrientation) num.integerValue];
                 }
-
+                
                 CFRelease(cfdic);
             }
-
+            
             [array addObject:[UIImage imageWithCGImage:imageRef scale:[UIScreen mainScreen].scale orientation:orientation]];
             CGImageRelease(imageRef);
         }
         NSTimeInterval duration = [LKImageUtil getCGImageSouceGIFFrameDelay:imageSource index:0];
         UIImage *image          = [LKImageUtil imageFromImages:array duration:duration];
-        result                  = image;
+        result.image            = image;
     }
     CFRelease(option);
     return result;

@@ -11,6 +11,8 @@
 #import "LKImageLoaderManager.h"
 #import "LKImageManager.h"
 #import <stdatomic.h>
+#import "LKImageDecoderManager.h"
+#import "LKImageRequest.h"
 
 atomic_int LKImageTotalRequestCount;
 atomic_int LKImageRunningRequestCount;
@@ -47,6 +49,22 @@ atomic_int LKImageFinishRequestCount;
 - (NSInteger)finishRequestCount
 {
     return LKImageFinishRequestCount;
+}
+
+- (void)requestDidFinishLoad:(LKImageRequest*)request
+{
+    if ([self.delegate respondsToSelector:@selector(requestDidFinishLoad:)])
+    {
+        [self.delegate requestDidFinishLoad:request];
+    }
+}
+
+- (void)requestDidFinishDecode:(LKImageRequest*)request
+{
+    if ([self.delegate respondsToSelector:@selector(requestDidFinishDecode:)])
+    {
+        [self.delegate requestDidFinishDecode:request];
+    }
 }
 
 @end

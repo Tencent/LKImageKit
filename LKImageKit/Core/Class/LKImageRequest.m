@@ -26,7 +26,6 @@
 @property (nonatomic, strong) NSOperation *loaderOperation;
 @property (nonatomic, strong) NSOperation *decodeOperation;
 @property (nonatomic, strong) NSOperation *processorOperation;
-@property (nonatomic, strong) LKImageLoader *loader;
 @property (atomic, assign) BOOL isCanceled;
 @property (atomic, assign) BOOL isStarted;
 @property (atomic, assign) BOOL isFinished;
@@ -35,9 +34,15 @@
 @property (atomic, assign) float progress;
 @property (atomic, strong) NSError *error;
 @property (nonatomic, assign) BOOL hasCache;
+@property (nonatomic, strong) LKImageDecoder *decoder;
+@property (nonatomic, assign) float decodeDuration;
+@property (nonatomic, strong) NSString *imageType;
+@property (nonatomic, strong) LKImageLoader *loader;
+@property (nonatomic, assign) float loadDuration;
 @property (nonatomic, weak) LKImageRequest *superRequest;
 @property (nonatomic, copy) LKImageManagerCallback managerCallback;
 @property (nonatomic, copy) LKImageLoaderCallback loaderCallback;
+@property (nonatomic, copy) LKImagePreloadCallback preloadCallback;
 @property (nonatomic, strong) NSMutableArray<LKImageRequest *> *requestList;
 @property (nonatomic, strong) NSArray<LKImageProcessor *> *internalProcessorList;
 @property (nonatomic, strong) NSArray<LKImageProcessor *> *processorList;
@@ -86,6 +91,7 @@
             }
 
             id value = [self valueForKey:key];
+            
             @try
             {
                 [request setValue:value forKey:key];
@@ -213,8 +219,28 @@
     }
 }
 
+- (void)invokePreloadCallback
+{
+    if (self.preloadCallback)
+    {
+        self.preloadCallback(self);
+        if (self.progress>=1 || self.error)
+        {
+            self.preloadCallback = nil;
+        }
+    }
+    for (LKImageRequest *request in self.requestList)
+    {
+        if (request.preloadCallback)
+        {
+            request.preloadCallback(self);
+        }
+    }
+}
+
 - (void)loaderCallback:(UIImage *)image
 {
+    [self invokePreloadCallback];
     if (self.loaderCallback)
     {
         self.loaderCallback(self, image);

@@ -55,6 +55,12 @@ typedef NS_ENUM(NSUInteger, LKImageRequestState) {
 @property (atomic, assign, readonly) float progress;
 @property (atomic, strong, readonly) NSError *error;
 @property (nonatomic, assign, readonly) BOOL hasCache;
+@property (nonatomic, strong, readonly) LKImageDecoder *decoder;
+@property (nonatomic, assign, readonly) float decodeDuration;
+@property (nonatomic, strong, readonly) NSString *imageType;
+@property (nonatomic, strong, readonly) LKImageLoader *loader;
+@property (nonatomic, assign, readonly) float loadDuration;
+
 
 @end
 

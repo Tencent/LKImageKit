@@ -66,7 +66,7 @@ typedef NS_ENUM(NSUInteger, LKImageLoaderCancelResult) {
 
 - (void)imageWithRequest:(LKImageRequest*)request callback:(LKImageLoaderCallback _Nullable)callback;
 
-- (void)preloadWithRequest:(LKImageRequest*)request;
+- (void)preloadWithRequest:(LKImageRequest*)request callback:(LKImagePreloadCallback _Nullable)callback;
 
 - (void)cancelRequest:(LKImageRequest *)request;
 

@@ -172,6 +172,7 @@
     if (error || progress >= 1)
     {
         requestLV2.isFinished = YES;
+        [[LKImageMonitor instance] requestDidFinishLoad:requestLV2];
         if (!requestLV2.synchronized)
         {
             dispatch_semaphore_signal(requestLV2.loader.semaphore);
@@ -184,7 +185,7 @@
         {
             [self requestDidFinished:requestLV2];
         }
-        
+        [requestLV2 invokePreloadCallback];
         if (requestLV2.supportProgressive || requestLV2.progress >= 1)
         {
             if (!requestLV2.loaderCallbackCount)
@@ -240,6 +241,7 @@
     if (error || progress >= 1)
     {
         requestLV2.isFinished = YES;
+        [[LKImageMonitor instance] requestDidFinishLoad:requestLV2];
         if (!requestLV2.synchronized)
         {
             dispatch_semaphore_signal(requestLV2.loader.semaphore);
@@ -395,8 +397,9 @@
     [self.queue lk_addOperation:op request:requestLV1];
 }
 
-- (void)preloadWithRequest:(LKImageRequest *)request
+- (void)preloadWithRequest:(LKImageRequest *)request callback:(LKImagePreloadCallback)callback
 {
+    request.preloadCallback = callback;
     [self imageWithRequest:request callback:nil];
 }
 
