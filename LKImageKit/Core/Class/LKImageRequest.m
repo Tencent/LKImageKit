@@ -27,13 +27,13 @@
 @property (nonatomic, strong) NSOperation *decodeOperation;
 @property (nonatomic, strong) NSOperation *processorOperation;
 @property (nonatomic, strong) LKImageLoader *loader;
-@property (nonatomic, assign) BOOL isCanceled;
-@property (nonatomic, assign) BOOL isStarted;
-@property (nonatomic, assign) BOOL isFinished;
+@property (atomic, assign) BOOL isCanceled;
+@property (atomic, assign) BOOL isStarted;
+@property (atomic, assign) BOOL isFinished;
 @property (nonatomic, strong) NSDate *requestBeginDate;
 @property (nonatomic, strong) NSDate *requestEndDate;
-@property (nonatomic, assign) float progress;
-@property (nonatomic, strong) NSError *error;
+@property (atomic, assign) float progress;
+@property (atomic, strong) NSError *error;
 @property (nonatomic, assign) BOOL hasCache;
 @property (nonatomic, weak) LKImageRequest *superRequest;
 @property (nonatomic, copy) LKImageManagerCallback managerCallback;
@@ -46,7 +46,9 @@
 @end
 
 @implementation LKImageRequest
-
+@synthesize priority = _priority;
+@synthesize progress = _progress;
+@synthesize error = _error;
 - (instancetype)init
 {
     if (self = [super init])
@@ -148,14 +150,26 @@
     [self generateIdentify];
 }
 
+- (NSOperationQueuePriority)priority
+{
+    @synchronized(self)
+    {
+        return _priority;
+    }
+}
+
 - (void)setPriority:(NSOperationQueuePriority)priority
 {
-    _priority = priority;
-    self.loaderOperation.queuePriority = priority;
-    self.decodeOperation.queuePriority = priority;
-    self.processorOperation.queuePriority = priority;
-    self.imageManagerCancelOperation.queuePriority = priority;
-    self.loaderManagerCancelOperation.queuePriority = priority;
+    @synchronized(self)
+    {
+        _priority = priority;
+        self.loaderOperation.queuePriority = priority;
+        self.decodeOperation.queuePriority = priority;
+        self.processorOperation.queuePriority = priority;
+        self.imageManagerCancelOperation.queuePriority = priority;
+        self.loaderManagerCancelOperation.queuePriority = priority;
+    }
+    
 }
 
 - (void)generateIdentify
@@ -271,47 +285,75 @@
 
 - (void)removeChildAtIndex:(NSUInteger)index
 {
-    LKImageRequest *request = _requestList[index];
-    [_requestList removeObjectAtIndex:index];
-    request.superRequest = nil;
-    
-    if (request.loaderCallback)
+    @synchronized(self)
     {
-        self.loaderCallbackCount--;
-    }
-    NSInteger priority = -1000;
-    for (LKImageRequest *request in self.requestList)
-    {
-        if (request.priority > priority)
+        LKImageRequest *request = _requestList[index];
+        [_requestList removeObjectAtIndex:index];
+        request.superRequest = nil;
+        
+        if (request.loaderCallback)
         {
-            priority = request.priority;
+            self.loaderCallbackCount--;
         }
+        NSInteger priority = -1000;
+        for (LKImageRequest *request in self.requestList)
+        {
+            if (request.priority > priority)
+            {
+                priority = request.priority;
+            }
+        }
+        self.priority = priority;
     }
-    self.priority = priority;
-    
+}
+
+- (NSError *)error
+{
+    @synchronized(self)
+    {
+        return _error;
+    }
 }
 
 - (void)setError:(NSError *)error
 {
-    _error = error;
-    for (LKImageRequest *request in self.requestList)
+    @synchronized(self)
     {
-        request.error = error;
+        _error = error;
+        for (LKImageRequest *request in self.requestList)
+        {
+            request.error = error;
+        }
+    }
+}
+
+- (float)progress
+{
+    @synchronized(self)
+    {
+        return _progress;
     }
 }
 
 - (void)setProgress:(float)progress
 {
-    _progress = progress;
-    for (LKImageRequest *request in self.requestList)
+    @synchronized(self)
     {
-        request.progress = progress;
+        _progress = progress;
+        for (LKImageRequest *request in self.requestList)
+        {
+            request.progress = progress;
+        }
     }
 }
 
 - (NSString *)description
 {
-    return [NSString stringWithFormat:@"%@ sub:%ld", [super description], (long) self.requestList.count];
+    @synchronized(self)
+    {
+        return [NSString stringWithFormat:@"%@ sub:%ld", [super description], (long) self.requestList.count];
+
+    }
 }
 
 @end

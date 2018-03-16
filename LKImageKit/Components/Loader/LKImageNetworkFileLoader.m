@@ -181,7 +181,7 @@
         }
         if (progress < 1)
         {
-            callback(request, recvdata, progress, nil);
+            callback(request, [NSData dataWithData:recvdata], progress, nil);
         }
     }
 }

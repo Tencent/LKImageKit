@@ -13,7 +13,7 @@
 
 @property (nonatomic, strong) NSString *identifier;
 @property (nonatomic, strong) NSString *keyForLoader;
-@property (nonatomic, assign) BOOL isDecoding;
+@property (atomic, assign) BOOL isDecoding;
 @property (nonatomic, strong) NSObject *decoderAttach;
 @property (nonatomic, strong) NSOperation *imageManagerCancelOperation;
 @property (nonatomic, strong) NSOperation *loaderManagerCancelOperation;

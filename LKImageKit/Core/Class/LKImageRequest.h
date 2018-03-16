@@ -36,7 +36,7 @@ typedef NS_ENUM(NSUInteger, LKImageRequestState) {
 @property (nonatomic, assign, readonly) LKImageRequestState state;
 
 //Default is 0
-@property (nonatomic, assign) NSOperationQueuePriority priority;
+@property (atomic, assign) NSOperationQueuePriority priority;
 
 //PreferredSize default is equal to LKImageView's size if using LKImageView.
 @property (nonatomic, assign) CGSize preferredSize;
@@ -52,8 +52,8 @@ typedef NS_ENUM(NSUInteger, LKImageRequestState) {
 //If false, cache is synchronized but LKImageManager/LKImageProcessorManager/LKImageLoaderManager has its own queue.
 @property (nonatomic, assign) BOOL synchronized;
 
-@property (nonatomic, assign, readonly) float progress;
-@property (nonatomic, strong, readonly) NSError *error;
+@property (atomic, assign, readonly) float progress;
+@property (atomic, strong, readonly) NSError *error;
 @property (nonatomic, assign, readonly) BOOL hasCache;
 
 @end
