@@ -161,7 +161,7 @@
                                                             <segment title="None"/>
                                                             <segment title="ScaleToFill"/>
                                                             <segment title="AspectFit"/>
-                                                            <segment title="AspectFit"/>
+                                                            <segment title="AspectFill"/>
                                                         </segments>
                                                         <connections>
                                                             <action selector="reload:" destination="B3s-Jr-exZ" eventType="valueChanged" id="1ea-nO-bSE"/>
