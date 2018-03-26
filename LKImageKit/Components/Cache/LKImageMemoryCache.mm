@@ -13,6 +13,8 @@
 #import <map>
 #import <string>
 #import <vector>
+#import <libkern/OSAtomic.h>
+
 using namespace std;
 
 struct ImageNode
@@ -53,6 +55,11 @@ struct ImagePointer
     return instance;
 }
 
++(OSSpinLock *)lk_lock {
+    static OSSpinLock lock = OS_SPINLOCK_INIT;
+    return &lock;
+}
+
 - (id)init
 {
     if (self = [super init])
@@ -76,6 +83,7 @@ struct ImagePointer
 
 - (void)clear
 {
+    OSSpinLockLock([[self class] lk_lock]);
     for (auto it = imageMap.begin(); it != imageMap.end(); it++)
     {
         delete *it->second->it;
@@ -84,11 +92,13 @@ struct ImagePointer
     FIFOQueue.clear();
     LRUQueue.clear();
     imageMap.clear();
+    OSSpinLockUnlock([[self class] lk_lock]);
 }
 
 - (void)clearWithURL:(NSString *)URL
 {
     vector<string> deleteKeys;
+    OSSpinLockLock([[self class] lk_lock]);
     for (auto it = imageMap.begin(); it != imageMap.end(); it++)
     {
         if (it->first.find([URL cStringUsingEncoding:NSUTF8StringEncoding]) != string::npos)
@@ -96,6 +106,7 @@ struct ImagePointer
             deleteKeys.push_back(it->first);
         }
     }
+    OSSpinLockUnlock([[self class] lk_lock]);
 
     for (int i = 0; i < deleteKeys.size(); i++)
     {
@@ -105,9 +116,11 @@ struct ImagePointer
 
 - (void)deleteCache:(string)key
 {
+    OSSpinLockLock([[self class] lk_lock]);
     auto it = imageMap.find(key);
     if (it == imageMap.end())
     {
+        OSSpinLockUnlock([[self class] lk_lock]);
         return;
     }
     ImagePointer *ptr = it->second;
@@ -122,6 +135,8 @@ struct ImagePointer
     }
     delete ptr;
     imageMap.erase(it);
+    OSSpinLockUnlock([[self class] lk_lock]);
+
 }
 
 - (void)clearWithKey:(NSString *)key
@@ -184,6 +199,7 @@ struct ImagePointer
 {
     NSString *key     = [self keyForURL:URL];
     ImagePointer *ptr = NULL;
+    OSSpinLockLock([[self class] lk_lock]);
     auto it           = imageMap.find([key cStringUsingEncoding:NSUTF8StringEncoding]);
     if (it == imageMap.end())
     {
@@ -210,6 +226,7 @@ struct ImagePointer
         [self visit:key];
     }
     [self limitCacheSize];
+    OSSpinLockUnlock([[self class] lk_lock]);
 }
 
 - (int64_t)singleImageSize:(UIImage*)image accurate:(BOOL)accurate
@@ -294,22 +311,28 @@ struct ImagePointer
         return nil;
     }
     NSString *key = [self keyForURL:URL];
+    OSSpinLockLock([[self class] lk_lock]);
     [self visit:key];
     auto it = imageMap.find([key cStringUsingEncoding:NSUTF8StringEncoding]);
     if (it == imageMap.end())
     {
+        OSSpinLockUnlock([[self class] lk_lock]);
         return nil;
     }
     UIImage *image = (*it->second->it)->image;
+    OSSpinLockUnlock([[self class] lk_lock]);
     return image;
 }
 
 - (BOOL)hasCacheWithURL:(NSString *)URL
 {
     NSString *key = [self keyForURL:URL];
+    OSSpinLockLock([[self class] lk_lock]);
     [self visit:key];
     auto it = imageMap.find([key cStringUsingEncoding:NSUTF8StringEncoding]);
-    return it != imageMap.end();
+    BOOL res = it != imageMap.end();
+    OSSpinLockUnlock([[self class] lk_lock]);
+    return res;
 }
 
 - (void)didReceiveLowMemoryNotification
