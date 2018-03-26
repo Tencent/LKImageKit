@@ -209,6 +209,7 @@
 
                      if (!CGSizeEqualToSize(self.oldSize, self.size)&&image.lk_isScaled)
                      {
+                         [request reset];
                          [self layoutAndLoad];
                          return;
                      }
@@ -217,6 +218,7 @@
                      {
                          if (request.error.code == LKImageErrorCodeCancel)
                          {
+                             [request reset];
                              [self layoutAndLoad];
                          }
                          else
