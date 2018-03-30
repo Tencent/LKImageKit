@@ -21,6 +21,11 @@
     CGColorSpaceRef colorspace = CGColorSpaceCreateDeviceRGB();
     CGContextRef context       = CGBitmapContextCreate(NULL, self.spriteSize.width, self.spriteSize.height, 8, 0, colorspace, bitmapInfo);
     CGColorSpaceRelease(colorspace);
+    if (!context)
+    {
+        complete(nil, [LKImageError errorWithCode:LKImageErrorCodeProcessorFailed]);
+        return;
+    }
     do
     {
         CGContextDrawImage(context, imageRect, input.CGImage);
