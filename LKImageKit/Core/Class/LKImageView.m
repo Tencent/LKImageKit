@@ -227,9 +227,10 @@
                              if (![request isEqual:self.failureImageRequest])
                              {
                                  [self dealWithRequest:self.failureImageRequest];
+                                 __weak LKImageView *wself = self;
                                  [self.imageManager sendRequest:self.failureImageRequest
                                                      completion:^(LKImageRequest *request, UIImage *image, BOOL isFromSyncCache) {
-                                                         [self handleRequestFinish:request image:image isFromSyncCache:isFromSyncCache];
+                                                         [wself handleRequestFinish:request image:image isFromSyncCache:isFromSyncCache];
                                                          
                                                      }];
                              }
