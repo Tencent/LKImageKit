@@ -97,7 +97,6 @@
     }
     LKImageURLRequest *URLRequest = (LKImageURLRequest *) request;
     NSString *URL                 = URLRequest.URL;
-    URL                           = [URL stringByAppendingString:@"?tp=sharp"];
     NSURL *fileURL                = [NSURL fileURLWithPath:[LKImageNetworkFileLoader cacheFilePathForURL:request.keyForLoader]];
     NSData *data                  = [NSData dataWithContentsOfURL:fileURL];
     if (data)
