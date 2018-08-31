@@ -47,6 +47,7 @@
 @property (nonatomic, strong) NSArray<LKImageProcessor *> *internalProcessorList;
 @property (nonatomic, strong) NSArray<LKImageProcessor *> *processorList;
 @property (nonatomic, assign) NSInteger loaderCallbackCount;
+@property (nonatomic, assign) NSInteger level;
 
 @end
 
@@ -69,7 +70,7 @@
     atomic_fetch_sub(&LKImageTotalRequestCount, 1);
 }
 
-- (id)copy
+- (id)copyWithZone:(NSZone *)zone
 {
     LKImageRequest *request = [[[self class] alloc] init];
     Class cls               = [self class];
@@ -80,7 +81,23 @@
         for (const Ivar *p = ivars; p < ivars + numberOfIvars; p++)
         {
             Ivar const ivar = *p;
-            NSString *key   = [NSString stringWithUTF8String:ivar_getName(ivar)];
+            const char *name = ivar_getName(ivar);
+            NSString *key   = [NSString stringWithUTF8String:name];
+            if (name&&name[0] != '\0')
+            {
+                objc_property_t property = class_getProperty(cls, name+1);
+                NSString *attr   = [NSString stringWithUTF8String:property_getAttributes(property)];
+                NSArray *array = [attr componentsSeparatedByString:@","];
+                if (array.count>2&&[array[1] isEqualToString:@"W"])
+                {
+                    continue;
+                }
+            }
+            if ([key hasSuffix:@"Callback"])
+            {
+                continue;
+            }
+            
             if (key == nil)
             {
                 continue;
@@ -112,11 +129,14 @@
 
 - (instancetype)createSuperRequest
 {
-    LKImageRequest *request = [self copy];
-    request.requestList     = [NSMutableArray array];
-    request.managerCallback = nil;
-    request.loaderCallback  = nil;
-    [request addChildRequest:self];
+    __block LKImageRequest *request;
+    @synchronized(self)
+    {
+        request = [self copy];
+        request.level = self.level+1;
+        request.requestList     = [NSMutableArray array];
+        [request addChildRequest:self];
+    }
     return request;
 }
 
@@ -245,11 +265,14 @@
     {
         self.loaderCallback(self, image);
     }
-    for (LKImageRequest *request in self.requestList)
+    @synchronized(self)
     {
-        if (request.loaderCallback)
+        for (LKImageRequest *request in self.requestList)
         {
-            request.loaderCallback(request, image);
+            if (request.loaderCallback)
+            {
+                request.loaderCallback(request, image);
+            }
         }
     }
 }
@@ -272,32 +295,37 @@
 
 - (void)addChildRequest:(LKImageRequest *)request
 {
-    [_requestList addObject:request];
-    request.superRequest = self;
-    if (request.cacheEnabled)
+    @synchronized(self)
     {
-        self.cacheEnabled = YES;
+        [_requestList addObject:request];
+        request.superRequest = self;
+        request.level = self.level-1;
+        if (request.cacheEnabled)
+        {
+            self.cacheEnabled = YES;
+        }
+        if (request.supportProgressive)
+        {
+            self.supportProgressive = YES;
+        }
+        if (request.synchronized)
+        {
+            self.synchronized = YES;
+        }
+        if (request.priority > self.priority)
+        {
+            self.priority = request.priority;
+        }
+        if (CGSizeEqualToSize(self.preferredSize, CGSizeZero))
+        {
+            self.preferredSize = request.preferredSize;
+        }
+        if (request.loaderCallback)
+        {
+            self.loaderCallbackCount++;
+        }
     }
-    if (request.supportProgressive)
-    {
-        self.supportProgressive = YES;
-    }
-    if (request.synchronized)
-    {
-        self.synchronized = YES;
-    }
-    if (request.priority > self.priority)
-    {
-        self.priority = request.priority;
-    }
-    if (CGSizeEqualToSize(self.preferredSize, CGSizeZero))
-    {
-        self.preferredSize = request.preferredSize;
-    }
-    if (request.loaderCallback)
-    {
-        self.loaderCallbackCount++;
-    }
+    
 }
 
 - (void)removeChildRequest:(LKImageRequest *)request
@@ -377,7 +405,7 @@
 {
     @synchronized(self)
     {
-        return [NSString stringWithFormat:@"%@ sub:%ld", [super description], (long) self.requestList.count];
+        return [NSString stringWithFormat:@"%@ lv:%ld sub:%ld start:%d cancel:%d finish:%d", [super description], (long)self.level,(long) self.requestList.count,self.isStarted,self.isCanceled,self.isFinished];
 
     }
 }
@@ -418,7 +446,11 @@
 
 - (NSString *)description
 {
-    return [NSString stringWithFormat:@"%@ URL:%@ id:%@ loadingState:%ld", [super description], self.URL, self.identifier, (long) self.state];
+    NSString *desc = [super description];
+    @synchronized(self)
+    {
+        return [NSString stringWithFormat:@"%@ URL:%@ id:%@ loadingState:%ld", desc, self.URL, self.identifier, (long) self.state];
+    }
 }
 
 @end

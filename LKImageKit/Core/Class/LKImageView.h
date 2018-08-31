@@ -62,6 +62,7 @@ typedef NS_ENUM(NSUInteger, LKImageViewAnimationMode) {
 @property (nonatomic, assign) BOOL shouldAutoPlay;                  //auto play after load mutiple images
 @property (nonatomic, assign) NSUInteger frameIndex;                //index of current image in mutiple images
 @property (nonatomic, assign) LKImageViewAnimationMode animationMode;
+@property (nonatomic, assign) BOOL isAnimationUseTimer;
 
 @property (nonatomic, strong) LKImageManager *imageManager;
 

@@ -192,9 +192,11 @@
             {
                 return;
             }
+            lkweakify(self);
             [self.decoderManager decodeImageFromData:data
                                              request:requestLV2
                                             complete:^(LKImageRequest *request, UIImage *image, NSError *error) {
+                                                lkstrongify(self);
                                                 NSOperation *op = [NSBlockOperation blockOperationWithBlock:^{
                                                     if (!request.supportProgressive)
                                                     {
@@ -289,31 +291,35 @@
 {
     if ([requestLV2.loader respondsToSelector:@selector(dataWithRequest:callback:)])
     {
-        lkweakify(self);
+        __weak __typeof(requestLV2) weakRequestLV2 = requestLV2;
         requestLV2.loaderOperation = [NSBlockOperation blockOperationWithBlock:^{
-            lkstrongify(self);
-            if (requestLV2.isCanceled)
+            __strong __typeof(requestLV2) strongRequestV2 = weakRequestLV2;
+            if (!strongRequestV2) {
+                return;
+            }
+            if (strongRequestV2.isCanceled)
             {
                 return;
             }
-            LKDispatch(requestLV2.synchronized, requestLV2.loader.gcd_queue, ^{
-                if (requestLV2.isCanceled)
+            LKDispatch(strongRequestV2.synchronized, strongRequestV2.loader.gcd_queue, ^{
+                if (strongRequestV2.isCanceled)
                 {
-                    dispatch_semaphore_signal(requestLV2.loader.semaphore);
+                    dispatch_semaphore_signal(strongRequestV2.loader.semaphore);
                     return;
                 }
-                requestLV2.isStarted = YES;
-                [requestLV2.loader dataWithRequest:requestLV2
+                strongRequestV2.isStarted = YES;
+                [strongRequestV2.loader dataWithRequest:strongRequestV2
                                           callback:^(LKImageRequest *requestLV2, NSData *data, float progress, NSError *error) {
-                                              [self loadDataRequestFinished:requestLV2 data:data progress:progress error:error];
+                                              [self loadDataRequestFinished:strongRequestV2 data:data progress:progress error:error];
                                           }];
             });
-            if (!requestLV2.synchronized)
+            if (!strongRequestV2.synchronized)
             {
-                dispatch_semaphore_wait(requestLV2.loader.semaphore, DISPATCH_TIME_FOREVER);
+                dispatch_semaphore_wait(strongRequestV2.loader.semaphore, DISPATCH_TIME_FOREVER);
             }
-            requestLV2.loaderOperation = nil;
+            strongRequestV2.loaderOperation = nil;
         }];
+        
         [requestLV2.loader.queue lk_addOperation:requestLV2.loaderOperation request:requestLV2];
     }
     else if ([requestLV2.loader respondsToSelector:@selector(imageWithRequest:callback:)])
@@ -355,7 +361,7 @@
     requestLV1.loaderCallback = callback;
     NSOperation *op           = [NSBlockOperation blockOperationWithBlock:^{
         requestLV1.isStarted = YES;
-        if (requestLV1.isCanceled)
+        if (requestLV1.isCanceled||requestLV1.isFinished)
         {
             requestLV1.isFinished = YES;
             requestLV1.error      = [LKImageError errorWithCode:LKImageErrorCodeCancel];

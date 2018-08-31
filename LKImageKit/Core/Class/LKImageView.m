@@ -209,7 +209,6 @@
 
                      if (!CGSizeEqualToSize(self.oldSize, self.size)&&image.lk_isScaled)
                      {
-                         [request reset];
                          [self layoutAndLoad];
                          return;
                      }
@@ -218,7 +217,6 @@
                      {
                          if (request.error.code == LKImageErrorCodeCancel)
                          {
-                             [request reset];
                              [self layoutAndLoad];
                          }
                          else
@@ -227,10 +225,11 @@
                              if (![request isEqual:self.failureImageRequest])
                              {
                                  [self dealWithRequest:self.failureImageRequest];
-                                 __weak LKImageView *wself = self;
+                                 lkweakify(self);
                                  [self.imageManager sendRequest:self.failureImageRequest
                                                      completion:^(LKImageRequest *request, UIImage *image, BOOL isFromSyncCache) {
-                                                         [wself handleRequestFinish:request image:image isFromSyncCache:isFromSyncCache];
+                                                         lkstrongify(self);
+                                                         [self handleRequestFinish:request image:image isFromSyncCache:isFromSyncCache];
                                                          
                                                      }];
                              }
@@ -280,21 +279,85 @@
     [self layoutAndLoad];
 }
 
-- (void)internalSetImage:(UIImage *)image withRequest:(LKImageRequest *)request
+- (void)updateImage
 {
-    self.currentRequest  = request;
-    _presentationImage   = image;
-    self.animationIndex  = 0;
+    UIImage *image = self.presentationImage;
     if (image.images.count > 1)
     {
-        self.imageView.image = image.images.firstObject;
-        self.imageView.animationImages = image.images;
+        if (self.isAnimationUseTimer)
+        {
+            self.imageView.image = image.images.firstObject;
+            self.imageView.animationImages = nil;
+        }
+        else
+        {
+            NSMutableArray *array = nil;
+            if (self.animationMode == LKImageViewAnimationModeNormal)
+            {
+                array = [NSMutableArray arrayWithArray:image.images];
+            }
+            else if (self.animationMode == LKImageViewAnimationModeReverse)
+            {
+                array = [NSMutableArray array];
+                for (NSInteger i=image.images.count-1; i>=0; i--)
+                {
+                    [array addObject:image.images[i]];
+                }
+            }
+            else
+            {
+                array = [NSMutableArray arrayWithArray:image.images];
+                for (NSInteger i=image.images.count-1; i>=0; i--)
+                {
+                    [array addObject:image.images[i]];
+                }
+            }
+            self.imageView.image = array.firstObject;
+            self.imageView.animationImages = array;
+        }
+        
     }
     else
     {
         self.imageView.image = image;
+        self.imageView.animationImages = nil;
         self.isAnimating = false;
     }
+    [self updateAnimationDuration];
+}
+
+- (void)updateAnimationDuration
+{
+    if (self.frameDuration>0)
+    {
+        self.imageView.animationDuration = self.frameDuration*self.imageView.animationImages.count;
+    }
+    else
+    {
+        if ([self.presentationImage.lk_imageInfo isKindOfClass:[LKImageAnimatedImageInfo class]])
+        {
+            LKImageAnimatedImageInfo *info = (LKImageAnimatedImageInfo*)self.presentationImage.lk_imageInfo;
+            self.imageView.animationDuration = info.frameDuration*self.imageView.animationImages.count;
+        }
+    }
+    
+}
+
+- (void)internalSetImage:(UIImage *)image withRequest:(LKImageRequest *)request
+{
+    self.currentRequest  = request;
+    if (_presentationImage)
+    {
+        __block UIImage *image = _presentationImage;
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            image = image;
+        });
+    }
+    
+    _presentationImage   = image;
+    
+    self.animationIndex  = 0;
+    [self updateImage];
     if (self.shouldAutoPlay && image.images.count > 1)
     {
         self.isAnimating = YES;
@@ -308,6 +371,7 @@
 - (void)setRequest:(LKImageRequest *)request
 {
     request.internalProcessorList = self.processorList;
+    LKImageLogVerbose([NSString stringWithFormat:@"setRequest:%@ oldReq:%@",request,self.request]);
     if (![_request isEqual:request] || _request.error)
     {
         [self.imageManager cancelRequest:_request];
@@ -328,6 +392,7 @@
 - (void)setLoadingImageRequest:(LKImageRequest *)loadingImageRequest
 {
     loadingImageRequest.internalProcessorList = self.processorList;
+    LKImageLogVerbose([NSString stringWithFormat:@"setLoadingRequest:%@ oldReq:%@",loadingImageRequest,self.loadingImageRequest]);
     if (![_loadingImageRequest isEqual:loadingImageRequest] || _loadingImageRequest.error)
     {
         [self.imageManager cancelRequest:_loadingImageRequest];
@@ -363,27 +428,45 @@
     }
 }
 
-- (void)setIsAnimating:(BOOL)isAnimating
+- (void)updateAnimationState
 {
-    if (_isAnimating == isAnimating)
+    if (self.isAnimationUseTimer)
     {
-        return;
-    }
-    if (self.presentationImage.images.count <= 1)
-    {
-        return;
-    }
-
-    _isAnimating = isAnimating;
-    if (isAnimating)
-    {
-        [self resetTimer];
+        if (self.isAnimating)
+        {
+            [self resetTimer];
+        }
+        else
+        {
+            [self.timer invalidate];
+            self.timer = nil;
+        }
     }
     else
     {
         [self.timer invalidate];
         self.timer = nil;
+        if (_isAnimating)
+        {
+            [self.imageView startAnimating];
+        }
+        else
+        {
+            [self.imageView stopAnimating];
+        }
     }
+}
+
+- (void)setIsAnimationUseTimer:(BOOL)isAnimationUseTimer
+{
+    _isAnimationUseTimer = isAnimationUseTimer;
+    [self updateAnimationState];
+}
+
+- (void)setIsAnimating:(BOOL)isAnimating
+{
+    _isAnimating = isAnimating;
+    [self updateAnimationState];
 }
 
 - (void)setShouldAutoPlay:(BOOL)shouldAutoPlay
@@ -399,7 +482,7 @@
 {
     [self.timer invalidate];
     self.timer = nil;
-    if (!self.isAnimating)
+    if (!self.isAnimating||!self.presentationImage||!self.isAnimationUseTimer)
     {
         return;
     }
@@ -432,6 +515,10 @@
 
 - (void)handleAnimation
 {
+    if (!self.window)
+    {
+        return;
+    }
     if (self.presentationImage.images.count == 0)
     {
         return;
@@ -490,6 +577,7 @@
 - (void)setFrameDuration:(NSTimeInterval)frameDuration
 {
     _frameDuration = frameDuration;
+    [self updateAnimationDuration];
     [self resetTimer];
 }
 

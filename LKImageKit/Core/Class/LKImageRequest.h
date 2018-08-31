@@ -21,7 +21,7 @@ typedef NS_ENUM(NSUInteger, LKImageRequestState) {
     LKImageRequestStateFinish,
 };
 
-@interface LKImageRequest : NSObject
+@interface LKImageRequest : NSObject<NSCopying>
 
 //Identify of request. Indicate requests is equal or not. Always use in memory cache
 @property (nonatomic, strong) NSString *identifier;
@@ -60,6 +60,7 @@ typedef NS_ENUM(NSUInteger, LKImageRequestState) {
 @property (nonatomic, strong, readonly) NSString *imageType;
 @property (nonatomic, strong, readonly) LKImageLoader *loader;
 @property (nonatomic, assign, readonly) float loadDuration;
+@property (nonatomic, assign, readonly) NSInteger level;
 
 
 @end

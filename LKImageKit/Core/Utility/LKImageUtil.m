@@ -272,53 +272,55 @@
             anchorPoint:(CGPoint)anchorPoint
                  opaque:(BOOL)opaque
 {
-    CGFloat screenScale = [UIScreen mainScreen].scale;
-    //convert to scale 1
-    CGSize imageSize = input.lk_pixelSize;
-    CGSize clipSize  = CGSizeMake(size.width * screenScale, size.height * screenScale);
-
-    CGRect imageRect = [LKImageUtil rectFromClipSize:imageSize
-                                            clipSize:clipSize
-                                           scaleMode:mode
-                                         anchorPoint:anchorPoint];
-    BOOL hasAlpha    = NO;
-    if (!opaque)
-    {
-        CGImageAlphaInfo info = CGImageGetAlphaInfo(input.CGImage);
-        if (info == kCGImageAlphaPremultipliedLast ||
-            info == kCGImageAlphaPremultipliedFirst ||
-            info == kCGImageAlphaLast ||
-            info == kCGImageAlphaFirst)
+    @autoreleasepool {
+        UIImage *image = nil;
+        CGFloat screenScale = [UIScreen mainScreen].scale;
+        //convert to scale 1
+        CGSize imageSize = input.lk_pixelSize;
+        CGSize clipSize  = CGSizeMake(size.width * screenScale, size.height * screenScale);
+        
+        CGRect imageRect = [LKImageUtil rectFromClipSize:imageSize
+                                                clipSize:clipSize
+                                               scaleMode:mode
+                                             anchorPoint:anchorPoint];
+        BOOL hasAlpha    = NO;
+        if (!opaque)
         {
-            hasAlpha = YES;
+            CGImageAlphaInfo info = CGImageGetAlphaInfo(input.CGImage);
+            if (info == kCGImageAlphaPremultipliedLast ||
+                info == kCGImageAlphaPremultipliedFirst ||
+                info == kCGImageAlphaLast ||
+                info == kCGImageAlphaFirst)
+            {
+                hasAlpha = YES;
+            }
         }
-    }
-
-    //Decode-Speed: CGContext>UIGraphic. So use CGContext first.
-    CGBitmapInfo bitmapInfo    = hasAlpha ? kCGBitmapByteOrder32Host | kCGImageAlphaPremultipliedFirst : kCGBitmapByteOrder32Host | kCGImageAlphaNoneSkipFirst;
-    CGColorSpaceRef colorspace = CGColorSpaceCreateDeviceRGB();
-    CGContextRef context       = CGBitmapContextCreate(NULL, clipSize.width, clipSize.height, 8, 0, colorspace, bitmapInfo);
-    CGColorSpaceRelease(colorspace);
-    if (!context)
-    {
-        //it is thread safe
-        UIGraphicsBeginImageContextWithOptions(size, opaque, 0.0);
-
-        //convert to screen scale
-        CGRect rect = CGRectMake(imageRect.origin.x / screenScale, imageRect.origin.y / screenScale, imageRect.size.width / screenScale, imageRect.size.height / screenScale);
-        [input drawInRect:rect];
-
-        UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
-        UIGraphicsEndImageContext();
-        return image;
-    }
-    else
-    {
-        CGContextDrawImage(context, imageRect, input.CGImage);
-        CGImageRef cgimage = CGBitmapContextCreateImage(context);
-        CFRelease(context);
-        UIImage *image = [UIImage imageWithCGImage:cgimage scale:screenScale orientation:input.imageOrientation];
-        CGImageRelease(cgimage);
+        
+        //Decode-Speed: CGContext>UIGraphic. So use CGContext first.
+        CGBitmapInfo bitmapInfo    = hasAlpha ? kCGBitmapByteOrder32Host | kCGImageAlphaPremultipliedFirst : kCGBitmapByteOrder32Host | kCGImageAlphaNoneSkipFirst;
+        CGColorSpaceRef colorspace = CGColorSpaceCreateDeviceRGB();
+        CGContextRef context       = CGBitmapContextCreate(NULL, clipSize.width, clipSize.height, 8, 0, colorspace, bitmapInfo);
+        CGColorSpaceRelease(colorspace);
+        if (!context)
+        {
+            //it is thread safe
+            UIGraphicsBeginImageContextWithOptions(size, opaque, 0.0);
+            
+            //convert to screen scale
+            CGRect rect = CGRectMake(imageRect.origin.x / screenScale, imageRect.origin.y / screenScale, imageRect.size.width / screenScale, imageRect.size.height / screenScale);
+            [input drawInRect:rect];
+            
+            image = UIGraphicsGetImageFromCurrentImageContext();
+            UIGraphicsEndImageContext();
+        }
+        else
+        {
+            CGContextDrawImage(context, imageRect, input.CGImage);
+            CGImageRef cgimage = CGBitmapContextCreateImage(context);
+            CFRelease(context);
+            image = [UIImage imageWithCGImage:cgimage scale:screenScale orientation:input.imageOrientation];
+            CGImageRelease(cgimage);
+        }
         return image;
     }
 }

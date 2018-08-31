@@ -29,7 +29,7 @@
 @property (nonatomic, assign) float progress;
 @property (nonatomic, strong) NSError *error;
 @property (nonatomic, assign) BOOL hasCache;
-@property (nonatomic, assign) LKImageDecoder *decoder;
+@property (nonatomic, strong) LKImageDecoder *decoder;
 @property (nonatomic, assign) float decodeDuration;
 @property (nonatomic, strong) NSString *imageType;
 @property (nonatomic, assign) float loadDuration;
@@ -41,6 +41,7 @@
 @property (nonatomic, strong) NSArray<LKImageProcessor *> *internalProcessorList;
 @property (nonatomic, strong) NSArray<LKImageProcessor *> *processorList;
 @property (nonatomic, assign) NSInteger loaderCallbackCount;
+@property (nonatomic, assign) NSInteger level;
 
 - (BOOL)canCancel;
 

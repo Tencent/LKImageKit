@@ -118,7 +118,7 @@
 - (void)requestDidFinished:(LKImageRequest *)requestLV1
 {
     requestLV1.isFinished = YES;
-    if (!requestLV1.synchronized)
+    if (!requestLV1.synchronized&&!requestLV1.isCanceled)
     {
         [self.requestDic removeObjectForKey:requestLV1.identifier];
     }
@@ -156,7 +156,7 @@
     requestLV0.isStarted = YES;
     atomic_fetch_add(&LKImageRunningRequestCount, 1);
     NSOperation *op = [NSBlockOperation blockOperationWithBlock:^{
-        if (requestLV0.isCanceled)
+        if (requestLV0.isCanceled||requestLV0.isFinished)
         {
             atomic_fetch_sub(&LKImageRunningRequestCount, 1);
             atomic_fetch_add(&LKImageCancelRequestCount, 1);
@@ -199,10 +199,11 @@
 - (void)loadRequest:(LKImageRequest *)requestLV1
 {
     LKImageLogVerbose([NSString stringWithFormat:@"LKImageManagerLoadRequest:%@", requestLV1]);
+    lkweakify(self);
     [self.loaderManager imageWithRequest:requestLV1
                                 callback:^(LKImageRequest *requestLV1, UIImage *image) {
+                                    lkstrongify(self);
                                     NSOperation *op = [NSBlockOperation blockOperationWithBlock:^{
-
                                         if (requestLV1.error)
                                         {
                                             [self requestDidFinished:requestLV1];
@@ -223,6 +224,7 @@
                                             }
                                         }
                                     }];
+                                    
                                     [self.queue lk_addOperation:op request:requestLV1];
                                 }];
 }
@@ -300,7 +302,7 @@
             [requestLV1 removeChildAtIndex:index];
             if (requestLV1.requestList.count == 0)
             {
-                LKImageLogVerbose([NSString stringWithFormat:@"ManagerTaskDidCanceled:%@", requestLV1.identifier]);
+                LKImageLogVerbose([NSString stringWithFormat:@"ManagerTaskDidCanceled:%@", requestLV1]);
                 [self.requestDic removeObjectForKey:requestLV1.identifier];
                 [self.loaderManager cancelRequest:requestLV1];
             }

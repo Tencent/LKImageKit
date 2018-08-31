@@ -95,37 +95,13 @@
     }
     else if (count == 1)
     {
-        CGImageRef imageRef            = CGImageSourceCreateImageAtIndex(imageSource, 0, option);
-        CFDictionaryRef cfdic          = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nil);
-        UIImageOrientation orientation = UIImageOrientationUp;
-        if (cfdic)
-        {
-            NSNumber *num = (__bridge NSNumber *) CFDictionaryGetValue(cfdic, kCGImagePropertyOrientation);
-            if (num != nil)
-            {
-                orientation = [LKImageUtil UIImageOrientationFromCGImagePropertyOrientation:(CGImagePropertyOrientation) num.integerValue];
-            }
-            
-            CFRelease(cfdic);
-        }
-        
-        UIImage *image = [UIImage imageWithCGImage:imageRef scale:[UIScreen mainScreen].scale orientation:orientation];
-        result.image   = image;
-        CGImageRelease(imageRef);
-    }
-    else
-    {
-        NSMutableArray *array = [NSMutableArray array];
-        for (NSUInteger i = 0; i < count; i++)
-        {
-            CGImageRef imageRef            = CGImageSourceCreateImageAtIndex(imageSource, i, i == 0 ? option : nil);
+        @autoreleasepool {
+            CGImageRef imageRef            = CGImageSourceCreateImageAtIndex(imageSource, 0, option);
+            CFDictionaryRef cfdic          = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nil);
             UIImageOrientation orientation = UIImageOrientationUp;
-            
-            CFDictionaryRef cfdic = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nil);
             if (cfdic)
             {
                 NSNumber *num = (__bridge NSNumber *) CFDictionaryGetValue(cfdic, kCGImagePropertyOrientation);
-                
                 if (num != nil)
                 {
                     orientation = [LKImageUtil UIImageOrientationFromCGImagePropertyOrientation:(CGImagePropertyOrientation) num.integerValue];
@@ -134,12 +110,40 @@
                 CFRelease(cfdic);
             }
             
-            [array addObject:[UIImage imageWithCGImage:imageRef scale:[UIScreen mainScreen].scale orientation:orientation]];
+            UIImage *image = [UIImage imageWithCGImage:imageRef scale:[UIScreen mainScreen].scale orientation:orientation];
+            result.image   = image;
             CGImageRelease(imageRef);
         }
-        NSTimeInterval duration = [LKImageUtil getCGImageSouceGIFFrameDelay:imageSource index:0];
-        UIImage *image          = [LKImageUtil imageFromImages:array duration:duration];
-        result.image            = image;
+    }
+    else
+    {
+        @autoreleasepool {
+            NSMutableArray *array = [NSMutableArray array];
+            for (NSUInteger i = 0; i < count; i++)
+            {
+                CGImageRef imageRef            = CGImageSourceCreateImageAtIndex(imageSource, i, i == 0 ? option : nil);
+                UIImageOrientation orientation = UIImageOrientationUp;
+                
+                CFDictionaryRef cfdic = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nil);
+                if (cfdic)
+                {
+                    NSNumber *num = (__bridge NSNumber *) CFDictionaryGetValue(cfdic, kCGImagePropertyOrientation);
+                    
+                    if (num != nil)
+                    {
+                        orientation = [LKImageUtil UIImageOrientationFromCGImagePropertyOrientation:(CGImagePropertyOrientation) num.integerValue];
+                    }
+                    
+                    CFRelease(cfdic);
+                }
+                
+                [array addObject:[UIImage imageWithCGImage:imageRef scale:[UIScreen mainScreen].scale orientation:orientation]];
+                CGImageRelease(imageRef);
+            }
+            NSTimeInterval duration = [LKImageUtil getCGImageSouceGIFFrameDelay:imageSource index:0];
+            UIImage *image          = [LKImageUtil imageFromImages:array duration:duration];
+            result.image            = image;
+        }
     }
     CFRelease(option);
     return result;
