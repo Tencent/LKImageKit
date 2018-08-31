@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
 	s.name = 'LKImageKit'
-	s.version = '5.3.1'
+	s.version = '5.4.0'
 	s.description = 'LKImageKit: a high-performance image framework'
 	s.homepage = 'https://github.com/Tencent/LKImageKit'
 	s.license = 'BSD 3-Clause'
