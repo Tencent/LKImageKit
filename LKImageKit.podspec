@@ -10,4 +10,5 @@ Pod::Spec.new do |s|
 	s.requires_arc = true
 	s.ios.deployment_target = '8.0'
 	s.source_files = 'LKImageKit/LKImageKit.h','LKImageKit/Core/**/*.{h,m}','LKImageKit/Components/**/*.{h,m,mm}'
+  	s.libraries = 'c++.1'
 end
