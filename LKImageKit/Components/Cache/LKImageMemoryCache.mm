@@ -19,6 +19,7 @@ struct ImageNode
 {
     string key;
     UIImage *image;
+    int64_t cost;
 };
 
 struct ImagePointer
@@ -37,6 +38,8 @@ struct ImagePointer
     list<ImageNode *> LRUQueue;
     map<string, ImagePointer *> imageMap;
 }
+
+@property (nonatomic, assign) int64_t currentCost;
 
 @end
 
@@ -84,6 +87,7 @@ struct ImagePointer
     FIFOQueue.clear();
     LRUQueue.clear();
     imageMap.clear();
+    self.currentCost = 0;
 }
 
 - (void)clearWithURL:(NSString *)URL
@@ -111,7 +115,10 @@ struct ImagePointer
         return;
     }
     ImagePointer *ptr = it->second;
+    ImageNode *node   = *ptr->it;
+    self.currentCost -= node->cost;
     delete *(ptr->it);
+    delete node;
     if (ptr->isLRUQueue)
     {
         LRUQueue.erase(ptr->it);
@@ -136,7 +143,7 @@ struct ImagePointer
 
 - (void)limitCacheSize
 {
-    while (self.cacheSize > self.cacheSizeLimit)
+    while (self.currentCost > self.cacheSizeLimit)
     {
         [self clearLastOne];
     }
@@ -160,6 +167,7 @@ struct ImagePointer
     {
         ImageNode *node = *LRUQueue.begin();
         LRUQueue.pop_front();
+        self.currentCost -= node->cost;
         auto it = imageMap.find(node->key);
         delete it->second;
         delete node;
@@ -173,6 +181,7 @@ struct ImagePointer
     {
         ImageNode *node = *FIFOQueue.begin();
         FIFOQueue.pop_front();
+        self.currentCost -= node->cost;
         auto it = imageMap.find(node->key);
         delete it->second;
         delete node;
@@ -185,11 +194,13 @@ struct ImagePointer
     NSString *key     = [self keyForURL:URL];
     ImagePointer *ptr = NULL;
     auto it           = imageMap.find([key cStringUsingEncoding:NSUTF8StringEncoding]);
+    int64_t cost = [self imageSize:image accurate:NO];
     if (it == imageMap.end())
     {
         ImageNode *node     = new ImageNode();
         ptr                 = new ImagePointer();
         node->image         = image;
+        node->cost          = cost;
         node->key           = [key cStringUsingEncoding:NSUTF8StringEncoding];
         ptr->it             = FIFOQueue.insert(FIFOQueue.end(), node);
         imageMap[node->key] = ptr;
@@ -197,16 +208,21 @@ struct ImagePointer
         {
             ImageNode *node = *FIFOQueue.begin();
             FIFOQueue.pop_front();
+            self.currentCost -= node->cost;
             auto it = imageMap.find(node->key);
             delete it->second;
             delete node;
             imageMap.erase(it);
         }
+        self.currentCost += cost;
     }
     else
     {
         ptr               = it->second;
         (*ptr->it)->image = image;
+        self.currentCost -= (*ptr->it)->cost;
+        (*ptr->it)->cost = cost;
+        self.currentCost += cost;
         [self visit:key];
     }
     [self limitCacheSize];
@@ -247,7 +263,7 @@ struct ImagePointer
 
 - (int64_t)cacheSize
 {
-    return [self cacheSize:NO];
+    return self.currentCost;
 }
 
 - (int64_t)cacheSize:(BOOL)accurate
